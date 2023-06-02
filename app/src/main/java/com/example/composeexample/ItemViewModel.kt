@@ -4,8 +4,9 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import java.io.Serializable
 
-data class ProgrLang(val name: String, val year: Int, var picture: Int = R.drawable.no_picture)
+data class ProgrLang(val name: String, val year: Int, var picture: Int = R.drawable.no_picture): Serializable
 
 class ItemViewModel : ViewModel() {
 

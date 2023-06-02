@@ -3,4 +3,5 @@
     <string name="Pascal">Автор - Никлаус Вирт.</string>
     <string name="C">Автор - Деннис Ритчи.</string>
     <string name="Java">Автор - Джеймс Гослинг.</string>
+    <string name="title_activity_input">InputActivity</string>
 </resources>
