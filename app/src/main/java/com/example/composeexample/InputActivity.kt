@@ -58,7 +58,7 @@ class InputActivity : ComponentActivity() {
         var langYear by remember { //объект для работы с текстом, для года создания языка
             mutableStateOf(0) //его начальное значение
         }
-        val scope = rememberCoroutineScope()
+//        val scope = rememberCoroutineScope()
         Row(
             //ряд для расположения эл-ов
             verticalAlignment = Alignment.CenterVertically, //центруем по вертикали

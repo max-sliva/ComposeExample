@@ -73,6 +73,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (savedInstanceState!=null && savedInstanceState.containsKey("langs")) {
+            //то мы наш массив langList берем из savedInstanceState
+            val tempLangArray = savedInstanceState.getSerializable("langs") as ArrayList<ProgrLang>
+            viewModel.clearList()
+            tempLangArray.forEach {
+                viewModel.addLangToEnd(it)
+            }
+            Toast.makeText(this, "From saved", Toast.LENGTH_SHORT).show()
+        } else Toast.makeText(this, "From create", Toast.LENGTH_SHORT).show()//иначе просто сообщение
+
         setContent {
             val lazyListState = rememberLazyListState()
             ComposeExampleTheme {
@@ -95,6 +105,18 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        Toast.makeText(this, "saved", Toast.LENGTH_SHORT).show() //сообщение для отслеживания
+        var tempLangArray = ArrayList<ProgrLang>() //временный ArrayList для сохранения данных
+        viewModel.langListFlow.value.forEach {//переносим данные из нашего основного массива
+            tempLangArray.add(it)
+        }
+        outState.putSerializable("langs", tempLangArray) //помещаем созданный массив в хранилище
+        //и даем ему метку langs, по ней потом его и найдем
+        super.onSaveInstanceState(outState)  //вызов метода базового класса
+    }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
