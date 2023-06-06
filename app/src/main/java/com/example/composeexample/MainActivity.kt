@@ -73,10 +73,10 @@ import coil.compose.rememberImagePainter
 
 class MainActivity : ComponentActivity() {
     private val viewModel = ItemViewModel() //модель данных нашего списка
-    var dbHelper : LangsDbHelper? = null // объект класса LangsDbHelper
+//    var dbHelper : LangsDbHelper? = null // объект класса LangsDbHelper
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        dbHelper = LangsDbHelper(this)  //создаем объект класса LangsDbHelper
+        val dbHelper = LangsDbHelper(this)  //создаем объект класса LangsDbHelper
         if (savedInstanceState != null && savedInstanceState.containsKey("langs")) {
             //то мы наш массив langList берем из savedInstanceState
             val tempLangArray = savedInstanceState.getSerializable("langs") as ArrayList<ProgrLang>
@@ -96,28 +96,15 @@ class MainActivity : ComponentActivity() {
                 dbHelper!!.addArrayToDB(tempLangArray) //заносим в нее наш массив
                 dbHelper!!.printDB()  //и выводим в консоль для проверки
             } else {  //иначе, если в БД есть записи
-                val permission: String = Manifest.permission.READ_EXTERNAL_STORAGE
-                val grant = ContextCompat.checkSelfPermission(this, permission)
-                if (grant != PackageManager.PERMISSION_GRANTED) {
-                    val permission_list = arrayOfNulls<String>(1)
-                    permission_list[0] = permission
-                    ActivityCompat.requestPermissions(
-                        this as Activity,
-                        permission_list,
-                        1
-                    )
-                }
                 println("DB has records")
                 dbHelper!!.printDB()   //выводим записи в консоль для проверки
-                val tempLangArray = dbHelper!!.getLangsArray()  //и выводим записи в наш массив
-                viewModel.clearList()
-                tempLangArray.forEach {
+                val tempLangArray = dbHelper!!.getLangsArray()  //берем записи из БД в виде массива
+                viewModel.clearList() //очищаем нашу модель данных
+                tempLangArray.forEach {//и в цикле по массиву переносим данные в нашу модель
                     viewModel.addLangToEnd(it)
                 }
             }
-
-        }//иначе просто сообщение
-
+        }
         setContent {
             val lazyListState = rememberLazyListState()
             ComposeExampleTheme {
@@ -127,11 +114,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Column(Modifier.fillMaxSize()) { //создаем колонку
                         MakeAppBar(viewModel, lazyListState, dbHelper!!) // вызываем новую функцию
-                        MakeList(
-                            viewModel,
-                            lazyListState,
-                            dbHelper!!
-                        ) //вызываем ф-ию для самого списка с данными
+                        MakeList(viewModel, lazyListState, dbHelper!!) //вызываем ф-ию для самого списка с данными
                     }
                 }
             }
@@ -279,12 +262,7 @@ fun pictureIsInt(picture: String): Boolean {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ListRow(
-    model: ProgrLang,
-    langListState: State<List<ProgrLang>>,
-    viewModel: ItemViewModel,
-    dbHelper: LangsDbHelper
-) {
+fun ListRow(model: ProgrLang, langListState: State<List<ProgrLang>>, viewModel: ItemViewModel, dbHelper: LangsDbHelper) {
     val context = LocalContext.current //получаем текущий контекст, он нужен для создания
     //всплывающего сообщения
     val openDialog = remember { mutableStateOf(false) } //по умолчанию – false, т.е. окно не вызвано
