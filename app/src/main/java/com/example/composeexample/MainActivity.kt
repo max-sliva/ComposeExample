@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -69,11 +70,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import coil.compose.rememberImagePainter
+
 class MainActivity : ComponentActivity() {
     private val viewModel = ItemViewModel() //модель данных нашего списка
-
+    var dbHelper : LangsDbHelper? = null // объект класса LangsDbHelper
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        dbHelper = LangsDbHelper(this)  //создаем объект класса LangsDbHelper
         if (savedInstanceState != null && savedInstanceState.containsKey("langs")) {
             //то мы наш массив langList берем из savedInstanceState
             val tempLangArray = savedInstanceState.getSerializable("langs") as ArrayList<ProgrLang>
@@ -82,8 +85,38 @@ class MainActivity : ComponentActivity() {
                 viewModel.addLangToEnd(it)
             }
             Toast.makeText(this, "From saved", Toast.LENGTH_SHORT).show()
-        } else Toast.makeText(this, "From create", Toast.LENGTH_SHORT)
-            .show()//иначе просто сообщение
+        } else {
+            Toast.makeText(this, "From create", Toast.LENGTH_SHORT).show()
+            if (dbHelper!!.isEmpty()) {  //если БД пустая
+                println("DB is emty")
+                var tempLangArray = ArrayList<ProgrLang>() //временный ArrayList для сохранения данных
+                viewModel.langListFlow.value.forEach {//переносим данные из нашего основного массива
+                    tempLangArray.add(it)
+                }
+                dbHelper!!.addArrayToDB(tempLangArray) //заносим в нее наш массив
+                dbHelper!!.printDB()  //и выводим в консоль для проверки
+            } else {  //иначе, если в БД есть записи
+                val permission: String = Manifest.permission.READ_EXTERNAL_STORAGE
+                val grant = ContextCompat.checkSelfPermission(this, permission)
+                if (grant != PackageManager.PERMISSION_GRANTED) {
+                    val permission_list = arrayOfNulls<String>(1)
+                    permission_list[0] = permission
+                    ActivityCompat.requestPermissions(
+                        this as Activity,
+                        permission_list,
+                        1
+                    )
+                }
+                println("DB has records")
+                dbHelper!!.printDB()   //выводим записи в консоль для проверки
+                val tempLangArray = dbHelper!!.getLangsArray()  //и выводим записи в наш массив
+                viewModel.clearList()
+                tempLangArray.forEach {
+                    viewModel.addLangToEnd(it)
+                }
+            }
+
+        }//иначе просто сообщение
 
         setContent {
             val lazyListState = rememberLazyListState()
@@ -93,10 +126,11 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Column(Modifier.fillMaxSize()) { //создаем колонку
-                        MakeAppBar(viewModel, lazyListState) // вызываем новую функцию
+                        MakeAppBar(viewModel, lazyListState, dbHelper!!) // вызываем новую функцию
                         MakeList(
                             viewModel,
-                            lazyListState
+                            lazyListState,
+                            dbHelper!!
                         ) //вызываем ф-ию для самого списка с данными
                     }
                 }
@@ -119,7 +153,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MakeAppBar(model: ItemViewModel, lazyListState: LazyListState) {
+fun MakeAppBar(model: ItemViewModel, lazyListState: LazyListState, dbHelper: LangsDbHelper) {
 //создаем объект для хранения состояния меню – открыто (true) или нет (false)
     var mDisplayMenu by remember { mutableStateOf(false) }
     val mContext = LocalContext.current // контекст нашего приложения
@@ -134,6 +168,7 @@ fun MakeAppBar(model: ItemViewModel, lazyListState: LazyListState) {
                 val newLang = result.data?.getSerializableExtra("newItem") as ProgrLang //как язык
                 println("new lang name = ${newLang.name}") //вывод для отладки
                 model.addLangToHead(newLang)
+                dbHelper.addLang(newLang)
                 scope.launch {//прокручиваем список, чтобы был виден добавленный элемент
                     lazyListState.scrollToItem(0)
                 }
@@ -180,7 +215,7 @@ fun MakeAppBar(model: ItemViewModel, lazyListState: LazyListState) {
 }
 
 @Composable
-fun MakeList(viewModel: ItemViewModel, lazyListState: LazyListState) {
+fun MakeList(viewModel: ItemViewModel, lazyListState: LazyListState, dbHelper: LangsDbHelper) {
     val langListState = viewModel.langListFlow.collectAsState()
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -193,7 +228,7 @@ fun MakeList(viewModel: ItemViewModel, lazyListState: LazyListState) {
             items = viewModel.langListFlow.value,
             key = { lang -> lang.name },
             itemContent = { item ->
-                ListRow(item, langListState, viewModel)
+                ListRow(item, langListState, viewModel, dbHelper)
             }
         )
     }
@@ -223,10 +258,33 @@ fun MakeAlertDialog(context: Context, dialogTitle: String, openDialog: MutableSt
     )
 }
 
+fun pictureIsInt(picture: String): Boolean {
+    var data = try {
+        picture.toInt()
+    } catch (e: NumberFormatException) {
+        null
+    }
+    return data != null
+}
+
+//@Composable
+//fun getImage(picture: String): Painter {
+//    val painter = if (pictureIsInt(picture)) {
+//        painterResource(picture.toInt())
+//    } else {
+//        rememberImagePainter(picture)
+//    }
+//    return painter
+//}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ListRow(model: ProgrLang, langListState: State<List<ProgrLang>>, viewModel: ItemViewModel) {
+fun ListRow(
+    model: ProgrLang,
+    langListState: State<List<ProgrLang>>,
+    viewModel: ItemViewModel,
+    dbHelper: LangsDbHelper
+) {
     val context = LocalContext.current //получаем текущий контекст, он нужен для создания
     //всплывающего сообщения
     val openDialog = remember { mutableStateOf(false) } //по умолчанию – false, т.е. окно не вызвано
@@ -234,15 +292,19 @@ fun ListRow(model: ProgrLang, langListState: State<List<ProgrLang>>, viewModel: 
     if (openDialog.value) //если дочернее окно (AlertDialog) вызвано
         MakeAlertDialog(context, langSelected.value, openDialog) //то создаем его
     var mDisplayMenu by remember { mutableStateOf(false) }
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            println("image uri = $uri") //отладочный вывод (будет в разделе Run внизу IDE)
-            val index = langListState.value.indexOf(model)
-            viewModel.changeImage(index, uri.toString())
+//    val launcher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.GetContent()
+//    ) { uri: Uri? ->
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+            if (res.data?.data != null) {
+                println("image uri = ${res.data?.data}") //отладочный вывод (будет в разделе Run внизу IDE)
+                val imgURI = res.data?.data
+                val index = langListState.value.indexOf(model)
+                viewModel.changeImage(index, imgURI.toString())
+                dbHelper!!.changeImgForLang(model.name, imgURI.toString())
+            }
         }
-    }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -318,8 +380,13 @@ fun ListRow(model: ProgrLang, langListState: State<List<ProgrLang>>, viewModel: 
 //                        .setType("image/*")
 //                        .setAction(Intent.ACTION_OPEN_DOCUMENT)
 //                        .addCategory(Intent.CATEGORY_OPENABLE)
+                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                        .apply {
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                        }
 //                    startForImage.launch(intent)
-                    launcher.launch("image/*")
+//                    launcher.launch("image/*")
+                    launcher.launch(intent)
 //                openDialog.value = true
                 }
             )
@@ -328,8 +395,14 @@ fun ListRow(model: ProgrLang, langListState: State<List<ProgrLang>>, viewModel: 
 //            painter = painterResource(id = model.picture), //указываем источник изображения
             //implementation "io.coil-kt:coil-compose:1.3.2"
             //import coil.compose.rememberImagePainter
-            painter = if (model.imageIsUri) rememberImagePainter(model.picture) else painterResource(id = model.picture.toInt()),
-
+//            painter = if (model.imageIsUri) rememberImagePainter(model.picture) else painterResource(id = model.picture.toInt()),
+//            painter = if (pictureIsInt(model.picture)) {
+//                painterResource(model.picture.toInt())
+//            } else {
+//                rememberImagePainter(model.picture)
+//            },
+            painter = if (pictureIsInt(model.picture)) painterResource(model.picture.toInt())
+                      else rememberImagePainter(data  = Uri.parse(model.picture)),
             contentDescription = "",  //можно вставить описание изображения
             contentScale = ContentScale.Fit, //параметры масштабирования изображения
             modifier = Modifier.size(90.dp)

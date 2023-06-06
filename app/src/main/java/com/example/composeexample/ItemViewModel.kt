@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.io.Serializable
 
-data class ProgrLang(val name: String, val year: Int, var picture: String = R.drawable.no_picture.toString(), var imageIsUri: Boolean = false): Serializable
+data class ProgrLang(val name: String, val year: Int, var picture: String = R.drawable.no_picture.toString()): Serializable
 
 class ItemViewModel : ViewModel() {
 
@@ -45,6 +45,6 @@ class ItemViewModel : ViewModel() {
     }
 
     fun changeImage(index: Int, value: String) {
-        langList[index] = langList[index].copy(picture = value, imageIsUri = true )
+        langList[index] = langList[index].copy(picture = value)
     }
 }
