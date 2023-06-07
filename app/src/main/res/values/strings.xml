@@ -4,4 +4,5 @@
     <string name="C">Автор - Деннис Ритчи.</string>
     <string name="Java">Автор - Джеймс Гослинг.</string>
     <string name="title_activity_input">InputActivity</string>
+    <string name="title_activity_drawing">DrawingActivity</string>
 </resources>

@@ -2,6 +2,7 @@ package com.example.composeexample
 //https://github.com/elye/demo_android_jetpack_compose_list_update
 //https://medium.com/mobile-app-development-publication/setup-a-self-modifiable-list-of-data-in-jetpack-compose-2057c1ae6109
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -53,15 +54,32 @@ import com.example.composeexample.ui.theme.ComposeExampleTheme
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DrawerState
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.ui.layout.ContentScale
@@ -73,7 +91,8 @@ import coil.compose.rememberImagePainter
 
 class MainActivity : ComponentActivity() {
     private val viewModel = ItemViewModel() //модель данных нашего списка
-//    var dbHelper : LangsDbHelper? = null // объект класса LangsDbHelper
+
+    //    var dbHelper : LangsDbHelper? = null // объект класса LangsDbHelper
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val dbHelper = LangsDbHelper(this)  //создаем объект класса LangsDbHelper
@@ -89,7 +108,8 @@ class MainActivity : ComponentActivity() {
             Toast.makeText(this, "From create", Toast.LENGTH_SHORT).show()
             if (dbHelper!!.isEmpty()) {  //если БД пустая
                 println("DB is emty")
-                var tempLangArray = ArrayList<ProgrLang>() //временный ArrayList для сохранения данных
+                var tempLangArray =
+                    ArrayList<ProgrLang>() //временный ArrayList для сохранения данных
                 viewModel.langListFlow.value.forEach {//переносим данные из нашего основного массива
                     tempLangArray.add(it)
                 }
@@ -114,7 +134,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Column(Modifier.fillMaxSize()) { //создаем колонку
                         MakeAppBar(viewModel, lazyListState, dbHelper!!) // вызываем новую функцию
-                        MakeList(viewModel, lazyListState, dbHelper!!) //вызываем ф-ию для самого списка с данными
+//                        MakeList(viewModel, lazyListState, dbHelper!!) //вызываем ф-ию для самого списка с данными
                     }
                 }
             }
@@ -134,6 +154,7 @@ class MainActivity : ComponentActivity() {
 
 }
 
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MakeAppBar(model: ItemViewModel, lazyListState: LazyListState, dbHelper: LangsDbHelper) {
@@ -160,9 +181,12 @@ fun MakeAppBar(model: ItemViewModel, lazyListState: LazyListState, dbHelper: Lan
 
     if (openDialog.value) //если дочернее окно вызвано, то запускаем функцию для его создания
         MakeAlertDialog(context = mContext, dialogTitle = "About", openDialog = openDialog)
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val snackbarHostState = remember { SnackbarHostState() }
+//    val scaffoldState = rememberScaffoldState()
     TopAppBar( //создаем верхнюю панель нашего приложения, в нем будет меню
         title = { Text("Языки программирования") }, //заголовок в верхней панели
-        actions = { //здесь разные действия можно прописать, нпаример, иконку для меню
+        actions = { //здесь разные действия можно прописать, например, иконку для меню
             IconButton(onClick = { mDisplayMenu = !mDisplayMenu }) { //создаем иконку
                 Icon(Icons.Default.MoreVert, null)  //в виде трех вертикальных точек
             } //в методе onClick прописано изменение объекта для хранения состояния меню
@@ -193,8 +217,63 @@ fun MakeAppBar(model: ItemViewModel, lazyListState: LazyListState, dbHelper: Lan
                     }
                 )
             }
+        },
+        navigationIcon = {
+            IconButton(
+                onClick = {
+                    scope.launch {
+                        drawerState?.open()
+                    }
+                },
+            ) {
+                Icon(
+                    Icons.Rounded.Menu,
+                    contentDescription = ""
+                )
+            }
         }
     )
+//    val drawerState = rememberDrawerState(DrawerValue.Closed)
+//    val scope = rememberCoroutineScope()
+    // icons to mimic drawer destinations
+    val items = listOf(Icons.Default.Favorite, Icons.Default.Face, Icons.Default.Email)
+    val selectedItem = remember { mutableStateOf(items[0]) }
+    ModalNavigationDrawer( //todo сделать вызов окна с рисованием
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                Spacer(Modifier.height(12.dp))
+                items.forEach { item ->
+                    NavigationDrawerItem(
+                        icon = { Icon(item, contentDescription = null) },
+                        label = { Text(item.name) },
+                        selected = item == selectedItem.value,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            selectedItem.value = item
+                        },
+                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                    )
+                }
+            }
+        },
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+//                Text(text = if (drawerState.isClosed) ">>> Swipe >>>" else "<<< Swipe <<<")
+//                Spacer(Modifier.height(20.dp))
+//                Button(onClick = { scope.launch { drawerState.open() } }) {
+//                    Text("Click to open")
+//                }
+                MakeList(viewModel = model, lazyListState, dbHelper)
+            }
+        }
+    )
+
 }
 
 @Composable
@@ -262,7 +341,12 @@ fun pictureIsInt(picture: String): Boolean {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ListRow(model: ProgrLang, langListState: State<List<ProgrLang>>, viewModel: ItemViewModel, dbHelper: LangsDbHelper) {
+fun ListRow(
+    model: ProgrLang,
+    langListState: State<List<ProgrLang>>,
+    viewModel: ItemViewModel,
+    dbHelper: LangsDbHelper
+) {
     val context = LocalContext.current //получаем текущий контекст, он нужен для создания
     //всплывающего сообщения
     val openDialog = remember { mutableStateOf(false) } //по умолчанию – false, т.е. окно не вызвано
@@ -358,7 +442,10 @@ fun ListRow(model: ProgrLang, langListState: State<List<ProgrLang>>, viewModel: 
 //                        .setType("image/*")
 //                        .setAction(Intent.ACTION_OPEN_DOCUMENT)
 //                        .addCategory(Intent.CATEGORY_OPENABLE)
-                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                    val intent = Intent(
+                        Intent.ACTION_OPEN_DOCUMENT,
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    )
                         .apply {
                             addCategory(Intent.CATEGORY_OPENABLE)
                         }
@@ -380,7 +467,7 @@ fun ListRow(model: ProgrLang, langListState: State<List<ProgrLang>>, viewModel: 
 //                rememberImagePainter(model.picture)
 //            },
             painter = if (pictureIsInt(model.picture)) painterResource(model.picture.toInt())
-                      else rememberImagePainter(data  = Uri.parse(model.picture)),
+            else rememberImagePainter(data = Uri.parse(model.picture)),
             contentDescription = "",  //можно вставить описание изображения
             contentScale = ContentScale.Fit, //параметры масштабирования изображения
             modifier = Modifier.size(90.dp)
