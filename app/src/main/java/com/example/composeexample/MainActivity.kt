@@ -62,6 +62,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DrawerState
@@ -222,7 +223,8 @@ fun MakeAppBar(model: ItemViewModel, lazyListState: LazyListState, dbHelper: Lan
             IconButton(
                 onClick = {
                     scope.launch {
-                        drawerState?.open()
+                        if (drawerState.isClosed) drawerState.open()
+                        else drawerState.close()
                     }
                 },
             ) {
@@ -233,28 +235,26 @@ fun MakeAppBar(model: ItemViewModel, lazyListState: LazyListState, dbHelper: Lan
             }
         }
     )
-//    val drawerState = rememberDrawerState(DrawerValue.Closed)
-//    val scope = rememberCoroutineScope()
-    // icons to mimic drawer destinations
-    val items = listOf(Icons.Default.Favorite, Icons.Default.Face, Icons.Default.Email)
+    val items = listOf(Icons.Default.Star, Icons.Default.Face, Icons.Default.Email)
     val selectedItem = remember { mutableStateOf(items[0]) }
-    ModalNavigationDrawer( //todo сделать вызов окна с рисованием
+    ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
                 Spacer(Modifier.height(12.dp))
-                items.forEach { item ->
+//                items.forEach { item ->
                     NavigationDrawerItem(
-                        icon = { Icon(item, contentDescription = null) },
-                        label = { Text(item.name) },
-                        selected = item == selectedItem.value,
+                        icon = { Icon(Icons.Default.Star, contentDescription = null) },
+                        label = { Text("Drawing") },
+                        selected = false,
                         onClick = {
                             scope.launch { drawerState.close() }
-                            selectedItem.value = item
+//                            selectedItem.value = item
+                            //todo сделать вызов окна с рисованием
                         },
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                     )
-                }
+//                }
             }
         },
         content = {
