@@ -33,6 +33,7 @@ class DrawingActivity : ComponentActivity() {
                         MakeTopButtons(drawingObject)
                         Canvas(modifier = Modifier.fillMaxSize()) {
                             val canvasQuadrantSize = size / 2F
+                            //todo сделать обход drawingObject.forEach, и смотреть какой это объект, и его рисовать
                             if (drawingObject.contains("Rect")) drawRect(
                                 color = Color.Magenta,
                                 size = canvasQuadrantSize
