@@ -2,7 +2,6 @@ package com.example.composeexample
 //https://github.com/elye/demo_android_jetpack_compose_list_update
 //https://medium.com/mobile-app-development-publication/setup-a-self-modifiable-list-of-data-in-jetpack-compose-2057c1ae6109
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -58,14 +57,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -75,10 +70,6 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.MutableState
@@ -155,7 +146,6 @@ class MainActivity : ComponentActivity() {
 
 }
 
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MakeAppBar(model: ItemViewModel, lazyListState: LazyListState, dbHelper: LangsDbHelper) {
@@ -182,9 +172,7 @@ fun MakeAppBar(model: ItemViewModel, lazyListState: LazyListState, dbHelper: Lan
 
     if (openDialog.value) //если дочернее окно вызвано, то запускаем функцию для его создания
         MakeAlertDialog(context = mContext, dialogTitle = "About", openDialog = openDialog)
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val snackbarHostState = remember { SnackbarHostState() }
-//    val scaffoldState = rememberScaffoldState()
+    val drawerStateObj = rememberDrawerState(initialValue = DrawerValue.Closed)
     TopAppBar( //создаем верхнюю панель нашего приложения, в нем будет меню
         title = { Text("Языки программирования") }, //заголовок в верхней панели
         actions = { //здесь разные действия можно прописать, например, иконку для меню
@@ -223,8 +211,8 @@ fun MakeAppBar(model: ItemViewModel, lazyListState: LazyListState, dbHelper: Lan
             IconButton(
                 onClick = {
                     scope.launch {
-                        if (drawerState.isClosed) drawerState.open()
-                        else drawerState.close()
+                        if (drawerStateObj.isClosed) drawerStateObj.open()
+                        else drawerStateObj.close()
                     }
                 },
             ) {
@@ -235,26 +223,22 @@ fun MakeAppBar(model: ItemViewModel, lazyListState: LazyListState, dbHelper: Lan
             }
         }
     )
-    val items = listOf(Icons.Default.Star, Icons.Default.Face, Icons.Default.Email)
-    val selectedItem = remember { mutableStateOf(items[0]) }
     ModalNavigationDrawer(
-        drawerState = drawerState,
+        drawerState = drawerStateObj,
         drawerContent = {
             ModalDrawerSheet {
                 Spacer(Modifier.height(12.dp))
-//                items.forEach { item ->
-                    NavigationDrawerItem(
-                        icon = { Icon(Icons.Default.Star, contentDescription = null) },
-                        label = { Text("Drawing") },
-                        selected = false,
-                        onClick = {
-                            scope.launch { drawerState.close() }
-//                            selectedItem.value = item
-                            //todo сделать вызов окна с рисованием
-                        },
-                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                    )
-//                }
+                NavigationDrawerItem(
+                    icon = { Icon(Icons.Default.Star, contentDescription = null) },
+                    label = { Text("Drawing") },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerStateObj.close() }
+                        val newAct = Intent(mContext, DrawingActivity::class.java) //описан ниже
+                        mContext.startActivity(newAct)
+                    },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
             }
         },
         content = {
@@ -264,11 +248,6 @@ fun MakeAppBar(model: ItemViewModel, lazyListState: LazyListState, dbHelper: Lan
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-//                Text(text = if (drawerState.isClosed) ">>> Swipe >>>" else "<<< Swipe <<<")
-//                Spacer(Modifier.height(20.dp))
-//                Button(onClick = { scope.launch { drawerState.open() } }) {
-//                    Text("Click to open")
-//                }
                 MakeList(viewModel = model, lazyListState, dbHelper)
             }
         }
