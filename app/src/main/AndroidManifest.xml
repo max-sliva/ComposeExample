@@ -15,7 +15,17 @@
         android:theme="@style/Theme.ComposeExample"
         tools:targetApi="31">
         <activity
+            android:name=".DrawingActivity2"
+            android:exported="false"
+            android:label="@string/title_activity_drawing2"
+            android:theme="@style/Theme.ComposeExample" />
+        <activity
             android:name=".DrawingActivity"
+            android:exported="false"
+            android:label="@string/title_activity_drawing"
+            android:theme="@style/Theme.ComposeExample" />
+        <activity
+            android:name=".DrawingActivity1"
             android:exported="false"
             android:label="@string/title_activity_drawing"
             android:theme="@style/Theme.ComposeExample" />

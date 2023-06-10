@@ -5,4 +5,5 @@
     <string name="Java">Автор - Джеймс Гослинг.</string>
     <string name="title_activity_input">InputActivity</string>
     <string name="title_activity_drawing">DrawingActivity</string>
+    <string name="title_activity_drawing2">DrawingActivity2</string>
 </resources>
