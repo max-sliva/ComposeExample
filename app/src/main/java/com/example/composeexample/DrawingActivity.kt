@@ -2,6 +2,7 @@ package com.example.composeexample
 
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
@@ -26,6 +27,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.composeexample.ui.theme.ComposeExampleTheme
 
@@ -34,7 +38,11 @@ class DrawingActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val drawingObjects = remember { mutableStateListOf("") }
-            val buttonNames = arrayOf("Rect", "Circle", "Image")
+            val buttonNames = arrayOf(
+                stringResource(R.string.rect),
+                stringResource(R.string.circle),
+                stringResource(R.string.image)
+            )
             ComposeExampleTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -47,21 +55,35 @@ class DrawingActivity : ComponentActivity() {
                             val canvasWidth = size.width
                             println("canvasWidth = $canvasWidth")
                             drawingObjects.forEach {
-                                if (it.contains("Rect")) drawRect(
+                                if (it.contains(buttonNames[0])) drawRect(
                                     color = Color.Magenta,
                                     size = canvasQuadrantSize
                                 )
-                                if (it.contains("Circle")) drawCircle(
-                                    Color.Red,
-                                    radius = canvasWidth / 4f
-                                )
-                                if (it.contains("Image")) {
-                                    val mBitmapFromSdcard =
-                                        BitmapFactory.decodeFile("/mnt/sdcard/face.png").asImageBitmap()
-                                    drawImage(
-                                        image = mBitmapFromSdcard,
-                                        topLeft = Offset(x = 0f, y = 0f)
-                                    )
+                                if (it.contains(buttonNames[1]))
+//                                    scale(scale = 2f) {
+                                        drawCircle(
+                                            Color.Red,
+                                            radius = canvasWidth / 4f
+                                        )
+//                                    }
+                                if (it.contains(buttonNames[2])) {
+                                    try {
+                                        val mBitmapFromSdcard =
+                                            BitmapFactory.decodeFile("/mnt/sdcard/face.png")
+                                                .asImageBitmap()
+                                        drawImage(
+                                            image = mBitmapFromSdcard,
+                                            topLeft = Offset(x = 0f, y = 0f)
+                                        )
+
+                                    } catch (e: NullPointerException) {
+                                        Toast.makeText(
+                                            applicationContext,
+                                            "No image",
+                                            Toast.LENGTH_LONG
+                                        )
+                                            .show()
+                                    }
                                 }
                             }
                         }

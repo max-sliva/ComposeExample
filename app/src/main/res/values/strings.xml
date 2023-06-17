@@ -1,9 +1,12 @@
 <resources>
     <string name="app_name">Compose Example</string>
-    <string name="Pascal">Автор - Никлаус Вирт.</string>
-    <string name="C">Автор - Деннис Ритчи.</string>
-    <string name="Java">Автор - Джеймс Гослинг.</string>
-    <string name="title_activity_input">InputActivity</string>
-    <string name="title_activity_drawing">DrawingActivity</string>
-    <string name="title_activity_drawing2">DrawingActivity2</string>
+    <string name="Pascal" translatable="false">Автор - Никлаус Вирт.</string>
+    <string name="C" translatable="false">Автор - Деннис Ритчи.</string>
+    <string name="Java" translatable="false">Автор - Джеймс Гослинг.</string>
+    <string name="title_activity_input" translatable="false">InputActivity</string>
+    <string name="title_activity_drawing" translatable="false">DrawingActivity</string>
+    <string name="title_activity_drawing2" translatable="false">DrawingActivity2</string>
+    <string name="rect">Rect</string>
+    <string name="circle">Circle</string>
+    <string name="image">Image</string>
 </resources>
