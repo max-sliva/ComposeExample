@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">Пример</string>
-    <string name="rect">Прямоугольник</string>
-    <string name="circle">Круг</string>
-    <string name="image">Изображение</string>
-</resources>
