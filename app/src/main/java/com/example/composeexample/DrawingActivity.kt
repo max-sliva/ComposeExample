@@ -64,6 +64,7 @@ class DrawingActivity : ComponentActivity() {
                 stringResource(R.string.circle),
                 stringResource(R.string.image)
             )
+//            val screenshotState = rememberScreenshotState()
             ComposeExampleTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -72,12 +73,13 @@ class DrawingActivity : ComponentActivity() {
 
                     Column(Modifier.fillMaxSize()) {
                         MakeTopButtons(buttonNames, drawingObjects)
+//                        ScreenshotBox(screenshotState = screenshotState) {
                         Canvas(
                             modifier = Modifier.
                             fillMaxSize()
-                            .pointerInput(true) {
+                            .pointerInput(true) { //добавляем обработчик касаний
                                 detectDragGestures { change, dragAmount ->
-                                    change.consume()
+//                                    change.consume()
                                     val line = Line(
                                         start = change.position - dragAmount,
                                         end = change.position
