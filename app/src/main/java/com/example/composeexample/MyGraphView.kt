@@ -1,6 +1,9 @@
 package com.example.composeexample
 
+import android.Manifest
+import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -10,6 +13,11 @@ import android.graphics.Path
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStream
 
 class MyGraphView(context: Context?) : View(context) {
     private lateinit var path: Path
@@ -60,6 +68,22 @@ class MyGraphView(context: Context?) : View(context) {
         val mBitmapFromSdcard = BitmapFactory.decodeFile("/mnt/sdcard/face.png")
         mCanvas!!.drawBitmap(mBitmapFromSdcard, 100f, 100f, mPaint) //рисуем его на нашем канвасе
         invalidate()
+    }
+
+    val funcArray = arrayOf(::drawSquare, ::drawCircle, ::drawFace, ::onSaveClick)
+    fun onSaveClick() {
+//получаем путь к каталогу программы на карте памяти (для этого проекта -
+// /storage/emulated/0/Android/data/com.example.composeexample/files)
+        val destPath: String = context.getExternalFilesDir(null)!!.absolutePath
+        var outStream: OutputStream? = null //объявляем поток вывода
+        val file = File(destPath, "my.PNG") //создаем файл с нужным путем и названием
+        println("path = $destPath") //вывод в консоль для отладки
+        outStream = FileOutputStream(file) //создаем объект потока и связываем его с файлом
+//у нашего битмапа вызываем функцию для записи его с нужными параметрами (тип графического файла,
+//качество в процентах и поток для записи)
+        mBitmap!!.compress(Bitmap.CompressFormat.PNG, 100, outStream)
+        outStream.flush() //для прохождения данных вызываем функцию flush у потока
+        outStream.close() //закрываем поток
     }
 
     //этот метод будет срабатывать при касании нашего объекта пользователем

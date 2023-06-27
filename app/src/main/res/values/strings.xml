@@ -9,4 +9,5 @@
     <string name="rect">Rect</string>
     <string name="circle">Circle</string>
     <string name="image">Image</string>
+    <string name="save">Save</string>
 </resources>
